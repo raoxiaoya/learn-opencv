@@ -101,3 +101,4 @@ if __name__ == '__main__':
     model.read('recognize_face.xml')
 
     recognizeFaceFromPicture(model)
+    

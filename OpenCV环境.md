@@ -7,9 +7,8 @@
 OpenCV的全称是Open Source Computer Vision Library，是一个跨平台的计算机视觉库。OpenCV是由英特尔公司发起并参与开发，以BSD许可证授权发行，可以在商业和研究领域中免费使用。OpenCV可用于开发实时的图像处理、计算机视觉以及模式识别程序。该程序库也可以使用英特尔公司的IPP进行加速处理。
 
 
-#### golang配置OpenCV
 
-##### 1、关于OpenCV
+##### 关于OpenCV
 
 https://github.com/opencv/opencv/tree/4.7.0
 
@@ -20,19 +19,67 @@ https://docs.opencv.org/4.7.0/  当前稳定版本 4.7.0
 opencv论坛 https://forum.opencv.org/
 
 
-##### 2、安装GoCV
 
-官网 https://gocv.io/
+#### python配置OpenCV
 
-对应的仓库 `https://github.com/hybridgroup/gocv`  基于`OpenCV-4.7.0`，大量示例在`cmd`目录下。
+```bash
+conda create -n opencv4.10 python==3.8
+conda activate opencv4.10
+pip install opencv-python==4.10.0.84 opencv-contrib-python==4.10.0.84 numpy==1.20.3 pytesseract==0.3.13 pillow=9.0.0
+```
+
+
+
+
+#### golang配置OpenCV
+
+官网教程 https://gocv.io/getting-started/windows/
+
+要使用gocv，需要在本机上编译安装opencv，你单纯的下载安装包还不行，比如安装包`https://github.com/opencv/opencv/releases/download/4.7.0/opencv-4.7.0-windows.exe`，因为你把安装包解压了之后就能看到它只有python和java的bingdings。
+
+我问了一下DeepSeek：为什么gocv要编译安装opencv，而cv2却不需要编译安装opencv呢？
+
+其回答如下：
+
+`gocv` 和 `cv2`（通常指的是Python的OpenCV接口）在处理与OpenCV库的关系时采用了不同的方法，这导致了它们在使用前是否需要编译安装OpenCV有所不同。
+
+1. **gocv**：`gocv` 是一个用于Go语言的计算机视觉库，它提供了一个Go语言接口来调用OpenCV的功能。由于Go语言和C++（OpenCV是用C++写的）之间存在差异，`gocv` 通过CGO等机制实现Go代码对C++库的调用。这意味着当你在使用`gocv`之前，可能需要先确保系统中已经正确编译安装了对应版本的OpenCV库。因为`gocv`依赖于底层的OpenCV C++ API，并且需要针对特定平台编译相应的绑定。
+2. **cv2 (Python-OpenCV)**：另一方面，当使用Python中的OpenCV（通常通过`import cv2`来使用），大多数情况下你只需要通过pip等包管理工具直接安装预编译的二进制文件（如`pip install opencv-python`）。这些预编译的包已经包含了所有必要的OpenCV组件，包括其C++部分，并且被配置为可以直接在Python环境中使用。因此，用户不需要自己手动编译OpenCV源码。
+
+总结来说，区别主要在于编程语言及其生态系统的特点：`gocv`作为Go语言的接口，需要开发者手动设置好C++环境以及OpenCV的编译安装；而`cv2`利用了Python丰富的包管理和预编译分发机制，简化了用户的使用流程，使得用户无需关心底层细节即可快速开始使用OpenCV的功能。
+
+
+
+gocv 与 golang 的版本以及opencv的版本要匹配上，比如 go1.18 安装的 gocv-v0.33.0，它对应的是 OpenCV-4.7.0，成功安装了，也可以运行，后来 go 升级到 1.23，于是就无法使用。
+
+对应的仓库 `https://github.com/hybridgroup/gocv` ，版本为`v0.33.0`，大量示例在`gocv/cmd`目录下。
 
 先安装`MinGW-W64 v8.1.0`和`CMake`并添加到环境变量。
 
-下载包 `go get -u -d gocv.io/x/gocv`
+```bash
+> cmake --version
+cmake version 3.27.0-rc3
 
-进入到`GOPATH`目录下找到`gocv`，使用PowerShell（不能是普通的cmd窗口）执行`win_build_opencv.cmd`来下载安装`opencv`，默认安装到了`C:\opencv`。
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
 
-需要一些时间。
+> gcc -v
+gcc version 8.1.0 (x86_64-posix-seh-rev0, Built by MinGW-W64 project)
+```
+
+下载包 `go get gocv.io/x/gocv@v0.33.0`
+
+提前打开梯子。
+
+查看安装程序 `%GOPATH%\pkg\mod\gocv.io\x\gocv@v0.40.0\win_build_opencv.cmd`，其过程倒是很简单，在安装的过程中发现通过此脚本下载安装包要比在浏览器上下载慢很多，于是可以先手动下载。
+
+```bash
+https://github.com/opencv/opencv/archive/4.7.0.zip
+https://github.com/opencv/opencv_contrib/archive/4.7.0.zip
+```
+
+然后修改`win_build_opencv.cmd`文件，去掉下载部分的代码即可。其次此文件里面写死了安装到在`C:\opencv`，版本为`OpenCV-4.7.0`。
+
+使用`管理员身份`执行`cmd`，进入`gocv`，运行`win_build_opencv.cmd`。需要一个小时左右。
 
 然后将`C:\opencv\build\install\x64\mingw\bin`添加到环境变量。
 
@@ -43,14 +90,19 @@ gocv version: 0.33.0
 opencv lib version: 4.7.0
 ```
 
-注意，opencv的功能是大量依赖于你本地环境的，在安装opencv的时候会开到大量的`not found`，然后它就将对应的功能设置为`off`，于是你在使用的时候就会报错，如果的确需要某功能，需要先装上对应的依赖，然后重新编译即可。
+注意，opencv的功能是大量依赖于你本地环境的，在安装opencv的时候会看到大量的`not found`，然后它就将对应的功能设置为`off`，于是你在使用的时候就会报错，如果的确需要某功能，需要先装上对应的依赖，然后重新编译即可。
+
+```bash
+rgbd: Eigen support is disabled. Eigen is Required for Posegraph optimization
+```
 
 在安装的时候，有的系统会报错`D:\Program`不是一个可运行程序，那是因为MinGW被安装在了`D:\Program Files`目录下，在命令行模式下，这个空格被解析为前面是程序，后面是参数，因此报错，我修改了`win_build_opencv.cmd`文件，将`mingw32-make`写成了绝对路径，并加上了双引号，如下：`D:\"Program Files"\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin\mingw32-make`，但是架不住还有隐藏的调用也报这个错，然后我的CMake是安装在`C:\Program Files`下面，这居然不报错，于是我就简单的将`D:\Program Files\mingw-w64` 移到了 `C:\Program Files\mingw-w64`，然后环境变量也跟着改了一下，居然就可以了。
 
+学习文档：
+https://blog.csdn.net/qq_15698613/category_9292368.html
 
-学习文档：  
-https://blog.csdn.net/qq_15698613/category_9292368.html  
-https://github.com/hybridgroup/gocv/cmd  
+https://github.com/hybridgroup/gocv/cmd
+
 https://blog.csdn.net/youcans/article/details/125112487
 
 Go数学库：gonum
